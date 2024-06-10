@@ -1,0 +1,107 @@
+# Blockchain Implementation
+
+This project implements a basic blockchain with Proof-of-Work (PoW) consensus, dynamic difficulty adjustment, and hash rate computation. The implementation is written in JavaScript and includes tests using Jest.
+
+## Features
+
+1. **Proof-of-Work (PoW)**
+2. **Dynamic Difficulty Adjustment**
+3. **Hash Rate Computation**
+
+## Proof-of-Work (PoW)
+
+Proof-of-Work is a consensus algorithm used to secure the blockchain. In this implementation, PoW involves finding a nonce that, when hashed with the block's data, produces a hash that starts with a specified number of leading zeros.
+
+### How It Works
+
+- The `proofOfWork` function iterates through possible nonce values to find a hash that meets the difficulty requirement.
+- The difficulty is the number of leading zeros required in the hash.
+- This process ensures that adding a new block to the blockchain requires computational effort, making it secure against tampering.
+
+### Code Example
+
+```javascript
+proofOfWork() {
+    let nonce = 0;
+    let hash = '';
+    let prevHash = this.chain.length !== 0 ? this.chain[this.chain.length - 1].hash : '0';
+    let timestamp = Math.floor(Date.now() / 1000);
+
+    let start = Date.now();
+    while (!hash.startsWith('0'.repeat(this.difficulty))) {
+        nonce++;
+        hash = this.getHash(prevHash, this.pendingTransactions, nonce, timestamp);
+    }
+    let end = Date.now();
+
+    let timeTaken = (end - start) / 1000; // Time taken in seconds
+    this.totalHashes += nonce;
+    this.totalTime += timeTaken;
+
+    console.log(`Block mined with nonce: ${nonce}, hash: ${hash}, time taken: ${timeTaken} seconds`);
+    return { nonce, timestamp };
+}
+Dynamic Difficulty Adjustment
+The difficulty of the Proof-of-Work algorithm increases after a specified number of blocks. This makes mining new blocks progressively harder, ensuring the security and integrity of the blockchain over time.
+
+How It Works
+The difficulty starts at a base value (e.g., 3).
+After mining a certain number of blocks (specified by difficultyIncrementInterval), the difficulty increases by 1.
+This increment process continues, making each subsequent block harder to mine.
+Code Example
+javascript
+Copy code
+addBlock(nonce, timestamp) {
+    let index = this.chain.length;
+    let prevHash = this.chain.length !== 0 ? this.chain[this.chain.length - 1].hash : '0';
+    let hash = this.getHash(prevHash, this.pendingTransactions, nonce, timestamp);
+    let block = new Block(index, this.pendingTransactions, prevHash, nonce, hash, timestamp);
+
+    // Reset pending txs
+    this.pendingTransactions = [];
+    this.chain.push(block);
+
+    // Increase difficulty if the block index is a multiple of the difficulty increment interval
+    if (index > 0 && index % this.difficultyIncrementInterval === 0) {
+        this.difficulty++;
+        console.log(`Difficulty increased to: ${this.difficulty}`);
+    }
+}
+Hash Rate Computation
+The hash rate is a measure of the computational power used in mining blocks. It is calculated as the total number of hashes attempted divided by the total time taken.
+
+How It Works
+The proofOfWork function tracks the number of hashes attempted and the time taken to mine each block.
+The total number of hashes and the total time are accumulated.
+The average hash rate is calculated and printed after each block is mined.
+Code Example
+javascript
+Copy code
+mine() {
+    const { nonce, timestamp } = this.proofOfWork();
+    this.addBlock(nonce, timestamp);
+
+    // Output the average hash rate
+    console.log(`Average hash rate: ${(this.totalHashes / this.totalTime).toFixed(2)} hashes per second`);
+}
+Running the Tests
+The project includes tests to verify the functionality of the blockchain implementation. The tests are written using Jest.
+
+Running the Tests
+Install Jest:
+bash
+Copy code
+npm install jest --save-dev
+Add the following script to package.json:
+json
+Copy code
+"scripts": {
+  "test": "jest"
+}
+Run the tests:
+bash
+Copy code
+npm test
+Project Structure
+blockchain.js: Contains the main blockchain implementation.
+blockchain.test.js: Contains the Jest tests for the blockchain.
